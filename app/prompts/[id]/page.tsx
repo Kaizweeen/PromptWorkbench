@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPrompt, listPrompts, listVersions } from '@/lib/repo';
+import { getPrompt, listPrompts, listStackPresets, listVersions } from '@/lib/repo';
 import { LibraryPane } from '@/components/library-pane';
 import { Workbench } from '@/components/workbench';
 import type { VersionSummary } from '@/components/version-history';
+import type { ArchetypeId } from '@/lib/templates';
+import { isArchetypeId } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,10 +55,20 @@ export default async function PromptPage(props: { params: Promise<{ id: string }
         <LibraryPane prompts={listPrompts()} activeId={id} />
         <Workbench
           promptId={id}
+          archetype={
+            isArchetypeId(prompt.archetype)
+              ? (prompt.archetype as ArchetypeId)
+              : 'custom'
+          }
           initialSections={latest.sections}
-          stack={latest.stack}
+          initialStack={latest.stack}
           channelOverrides={latest.channelOverrides}
           versions={versions}
+          presets={listStackPresets().map((p) => ({
+            id: p.id,
+            name: p.name,
+            stack: p.stack,
+          }))}
         />
       </div>
     </div>

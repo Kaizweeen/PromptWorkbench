@@ -9,7 +9,14 @@
 import 'server-only';
 import { and, count, desc, eq, max } from 'drizzle-orm';
 import { db } from './db';
-import { prompts, versions, type Prompt, type Version } from './db/schema';
+import {
+  prompts,
+  stackPresets,
+  versions,
+  type Prompt,
+  type StackPreset,
+  type Version,
+} from './db/schema';
 import { emptySections, type Channel, type PromptSections, type SectionKey } from './sections';
 import type { TechStack } from './render';
 
@@ -246,4 +253,42 @@ export function forkPrompt(versionId: string, name?: string): { promptId: string
 
 export function deletePrompt(promptId: string): void {
   db.delete(prompts).where(eq(prompts.id, promptId)).run();
+}
+
+/* ---------------------------------------------------------------- presets */
+
+/** Saved stack presets, e.g. "my default web stack". */
+export function listStackPresets(): StackPreset[] {
+  return db.select().from(stackPresets).orderBy(stackPresets.name).all();
+}
+
+/**
+ * Save a preset. Re-saving under an existing name replaces that preset's
+ * stack rather than erroring on the unique constraint.
+ */
+export function saveStackPreset(name: string, stack: TechStack): StackPreset {
+  const trimmed = name.trim();
+  if (trimmed === '') throw new Error('Preset name is required');
+
+  const existing = db
+    .select()
+    .from(stackPresets)
+    .where(eq(stackPresets.name, trimmed))
+    .get();
+
+  if (existing) {
+    db.update(stackPresets)
+      .set({ stack })
+      .where(eq(stackPresets.id, existing.id))
+      .run();
+    return { ...existing, stack };
+  }
+
+  const id = newId();
+  db.insert(stackPresets).values({ id, name: trimmed, stack }).run();
+  return db.select().from(stackPresets).where(eq(stackPresets.id, id)).get()!;
+}
+
+export function deleteStackPreset(id: string): void {
+  db.delete(stackPresets).where(eq(stackPresets.id, id)).run();
 }

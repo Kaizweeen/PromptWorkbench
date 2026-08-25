@@ -12,6 +12,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   createPrompt,
+  deleteStackPreset,
+  saveStackPreset,
   forkPrompt,
   restoreVersion,
   saveVersion,
@@ -20,6 +22,7 @@ import {
   type VersionContent,
 } from '@/lib/repo';
 import { emptySections } from '@/lib/sections';
+import type { TechStack } from '@/lib/render';
 
 function requireId(value: unknown, label: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
@@ -95,4 +98,16 @@ export async function deletePromptAction(formData: FormData) {
 
   revalidatePath('/');
   redirect('/');
+}
+
+export async function saveStackPresetAction(name: string, stack: TechStack) {
+  const preset = saveStackPreset(name, stack);
+  revalidatePath('/');
+  return { id: preset.id, name: preset.name };
+}
+
+export async function deleteStackPresetAction(id: string) {
+  requireId(id, 'presetId');
+  deleteStackPreset(id);
+  revalidatePath('/');
 }

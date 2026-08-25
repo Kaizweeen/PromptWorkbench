@@ -11,45 +11,65 @@ import { useRouter } from 'next/navigation';
 import { renderPrompt, type TechStack } from '@/lib/render';
 import type { Channel, PromptSections, SectionKey } from '@/lib/sections';
 import { detectVariables } from '@/lib/variables';
-import { saveVersionAction } from '@/app/actions';
+import { fromTechStack, toTechStack } from '@/lib/stack';
+import { applyDraft, type ApplyMode } from '@/lib/generate';
+import type { ArchetypeId } from '@/lib/templates';
+import { saveVersionAction, updateMetaAction } from '@/app/actions';
+import { GeneratePanel } from './generate-panel';
+import type { PresetSummary } from './stack-picker';
 import { PreviewPane } from './preview-pane';
 import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
 
-type RightTab = 'preview' | 'history';
+type RightTab = 'preview' | 'generate' | 'history';
 
 export function Workbench({
   promptId,
+  archetype,
   initialSections,
-  stack,
+  initialStack,
   channelOverrides,
   versions,
+  presets,
 }: {
   promptId: string;
+  archetype: ArchetypeId;
   initialSections: PromptSections;
-  stack: TechStack | null;
+  initialStack: TechStack | null;
   channelOverrides: Partial<Record<SectionKey, Channel>> | null;
   versions: VersionSummary[];
+  presets: PresetSummary[];
 }) {
   const router = useRouter();
   const [sections, setSections] = useState(initialSections);
+  const [stackSelection, setStackSelection] = useState(() => fromTechStack(initialStack));
+  // Generation inputs live here rather than in the panel so switching tabs
+  // does not discard what you typed.
+  const [goal, setGoal] = useState('');
+  const [requirements, setRequirements] = useState<string[]>([]);
+  const [currentArchetype, setCurrentArchetype] = useState<ArchetypeId>(archetype);
   const [message, setMessage] = useState('');
   const [tab, setTab] = useState<RightTab>('preview');
   const [pending, startTransition] = useTransition();
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
-  // The working copy differs from the last saved version.
+  const stack = useMemo(() => toTechStack(stackSelection), [stackSelection]);
+
+  // The working copy differs from the last saved version. Stack counts too —
+  // it is stored on the version and renders into the prompt.
   const dirty = useMemo(
-    () => JSON.stringify(sections) !== JSON.stringify(initialSections),
-    [sections, initialSections],
+    () =>
+      JSON.stringify(sections) !== JSON.stringify(initialSections) ||
+      JSON.stringify(stack) !== JSON.stringify(initialStack ?? []),
+    [sections, initialSections, stack, initialStack],
   );
 
   const rendered = useMemo(
     () =>
       renderPrompt(sections, {
-        stack: stack ?? undefined,
+        stack,
         channelOverrides: channelOverrides ?? undefined,
       }),
     [sections, stack, channelOverrides],
@@ -70,6 +90,19 @@ export function Workbench({
       router.refresh();
     });
   }, [dirty, pending, promptId, sections, stack, channelOverrides, message, router]);
+
+  function changeArchetype(id: ArchetypeId) {
+    setCurrentArchetype(id);
+    startTransition(async () => {
+      await updateMetaAction(promptId, { archetype: id });
+      router.refresh();
+    });
+  }
+
+  function applyGenerated(draft: PromptSections, mode: ApplyMode) {
+    setSections((prev) => applyDraft(prev, draft, mode));
+    setTab('preview');
+  }
 
   // Cmd/Ctrl+S saves a version.
   useEffect(() => {
@@ -142,14 +175,32 @@ export function Workbench({
           <TabButton active={tab === 'preview'} onClick={() => setTab('preview')}>
             preview
           </TabButton>
+          <TabButton active={tab === 'generate'} onClick={() => setTab('generate')}>
+            generate
+          </TabButton>
           <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
             history ({versions.length})
           </TabButton>
         </div>
 
-        {tab === 'preview' ? (
-          <PreviewPane rendered={rendered} />
-        ) : (
+        {tab === 'preview' && <PreviewPane rendered={rendered} />}
+        {tab === 'generate' && (
+          <GeneratePanel
+            archetype={currentArchetype}
+            onArchetype={changeArchetype}
+            goal={goal}
+            onGoal={setGoal}
+            requirements={requirements}
+            onRequirements={setRequirements}
+            stackSelection={stackSelection}
+            onStackSelection={setStackSelection}
+            presets={presets}
+            onApplyPreset={(s) => setStackSelection(fromTechStack(s))}
+            current={sections}
+            onApply={applyGenerated}
+          />
+        )}
+        {tab === 'history' && (
           <VersionHistory promptId={promptId} versions={versions} />
         )}
       </Pane>

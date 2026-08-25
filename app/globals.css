@@ -37,3 +37,17 @@ body {
 ::selection {
   background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
+
+/* Placeholders must never be mistaken for authored prompt content. */
+textarea::placeholder,
+input::placeholder {
+  color: var(--color-faint);
+  opacity: 0.55;
+}
+
+/* Grow textareas with their content so a whole section is visible at once,
+   bounded so a long pasted document cannot swallow the pane. */
+textarea {
+  field-sizing: content;
+  max-height: 60vh;
+}

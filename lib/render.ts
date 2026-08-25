@@ -125,8 +125,13 @@ export function renderTechStack(stack: TechStack): string {
   return tagged('tech_stack', lines.join('\n'));
 }
 
-/** Render one section to text, or '' when it holds nothing. */
-function renderSection(spec: SectionSpec, sections: PromptSections): string {
+/**
+ * Render one section to text, or '' when it holds nothing.
+ *
+ * Exported so the version diff can compare what actually reaches the prompt,
+ * rather than comparing raw editor content.
+ */
+export function renderSection(spec: SectionSpec, sections: PromptSections): string {
   if (isSectionEmpty(sections, spec.key)) return '';
 
   switch (spec.kind) {

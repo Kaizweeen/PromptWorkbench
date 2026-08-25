@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/*
+ * Developer-tool palette: dense, dark by default, no gradients.
+ * Sans for chrome, monospace for prompt content.
+ */
+@theme {
+  --color-bg: #0b0d10;
+  --color-panel: #111419;
+  --color-panel-2: #161a21;
+  --color-border: #232833;
+  --color-border-strong: #2f3542;
+  --color-text: #e4e7ec;
+  --color-muted: #8b94a3;
+  --color-faint: #5d6675;
+  --color-accent: #6ea8fe;
+  --color-system: #7ee2b8;
+  --color-user: #f0b866;
+  --color-prefill: #c39bf5;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}

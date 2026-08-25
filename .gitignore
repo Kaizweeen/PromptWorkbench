@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Local database — never committed.
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# The API key lives here and must not reach the repo.
+.env.local
+.env*.local
+
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+coverage/

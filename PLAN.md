@@ -131,9 +131,11 @@ carrying the old sections forward. Nothing is ever destructive.
 
 ---
 
-## 6. Questions before I build
+## 6. Resolved decisions
 
-### Q1 — Prefill (section 10) conflicts with every current model
+> All three confirmed before Phase 1. Recorded here as the answers, not open questions.
+
+### D1 — Prefill: author it, warn at run time  **[CONFIRMED]**
 
 This is the one real problem in the spec. **Assistant-turn prefill returns a 400
 on Opus 5, Sonnet 5, Fable 5, and the whole 4.6/4.7/4.8 family.** It was removed
@@ -143,16 +145,15 @@ picker, only Haiku 4.5 still accepts a prefill.
 
 So a prefill section that renders faithfully would fail on your default model.
 
-My recommendation: **keep prefill as an authorable section** — it's part of the
+**Decision: keep prefill as an authorable section** — it's part of the
 canonical structure and worth teaching — but make the run layer model-aware:
 render it, show it in the preview, and when the selected model rejects prefill,
 surface an inline warning offering to convert it to an `output_format` constraint
 instead of sending it. Never silently drop it, never silently 400.
 
-### Q2 — Which sections go to `system` vs `user`?
+### D2 — Split: stable in system, variable in user  **[CONFIRMED]**
 
-The spec says split into system/user but doesn't fix the mapping, and it's the
-core of the render function. My proposed default:
+The mapping the renderer implements:
 
 - **system:** task context, tone, background/documents, rules, examples,
   thinking instructions, output format, tech stack
@@ -160,12 +161,11 @@ core of the render function. My proposed default:
 
 Rationale: everything stable and reusable goes in system (cacheable prefix);
 everything that varies per-invocation goes in user. That also makes prompt
-caching work correctly later. I'd make it overridable per-prompt with a toggle,
-defaulting as above.
+caching work correctly later. Overridable per-prompt with a toggle, defaulting as above.
 
-### Q3 — Model roster and defaults
+### D3 — Roster: Opus 5 / Sonnet 5 / Haiku 4.5, effort exposed  **[CONFIRMED]**
 
-Proposed: `claude-opus-5` as the strong/default, `claude-sonnet-5` as the
+`claude-opus-5` as the strong/default, `claude-sonnet-5` as the
 iteration model, `claude-haiku-4-5` for cheap bulk test-suite runs, and
 `claude-fable-5` available but not default (2x Opus pricing). Per-run override
 in the UI, default constant in `lib/config.ts`.
@@ -173,7 +173,7 @@ in the UI, default constant in `lib/config.ts`.
 Also: current models use adaptive thinking with an `effort` knob
 (`low`→`max`, default `high`) rather than the old `budget_tokens`. I'd expose
 effort as a per-run control since it materially changes both output quality and
-cost. Say if you'd rather keep the run surface simpler.
+cost. Effort is exposed as a per-run control.
 
 ---
 

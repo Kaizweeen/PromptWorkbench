@@ -21,12 +21,13 @@ import { PreviewPane } from './preview-pane';
 import { RunPanel } from './run-panel';
 import { BrainstormPanel } from './brainstorm-panel';
 import { RequirementChips } from './requirement-chips';
+import { RefinePanel } from './refine-panel';
 import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
 
-type RightTab = 'preview' | 'run' | 'brainstorm' | 'generate' | 'history';
+type RightTab = 'preview' | 'run' | 'brainstorm' | 'generate' | 'refine' | 'history';
 
 export function Workbench({
   promptId,
@@ -189,6 +190,9 @@ export function Workbench({
           <TabButton active={tab === 'generate'} onClick={() => setTab('generate')}>
             generate
           </TabButton>
+          <TabButton active={tab === 'refine'} onClick={() => setTab('refine')}>
+            refine
+          </TabButton>
           <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
             history ({versions.length})
           </TabButton>
@@ -236,6 +240,16 @@ export function Workbench({
             onApplyPreset={(s) => setStackSelection(fromTechStack(s))}
             current={sections}
             onApply={applyGenerated}
+          />
+        )}
+        {tab === 'refine' && (
+          <RefinePanel
+            sections={sections}
+            stack={stack}
+            onApply={(next) => {
+              setSections(next);
+              setTab('preview');
+            }}
           />
         )}
         {tab === 'history' && (

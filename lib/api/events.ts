@@ -7,6 +7,7 @@
 
 import type { ErrorKind } from './errors';
 import type { TokenUsage } from '../config';
+import type { PromptSections } from '../sections';
 
 export type RunEvent =
   | { type: 'warning'; messages: string[] }
@@ -20,6 +21,11 @@ export type RunEvent =
       costUsd: number;
       durationMs: number;
       stopReason: string | null;
+    }
+  | {
+      type: 'refined';
+      sections: Partial<PromptSections>;
+      notes: string[];
     }
   | { type: 'error'; kind: ErrorKind; message: string; retryable: boolean };
 

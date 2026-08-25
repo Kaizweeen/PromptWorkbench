@@ -1,0 +1,98 @@
+'use server';
+
+/**
+ * Server Actions for prompt mutations.
+ *
+ * Single-user local app: there is no auth to check, but every action still
+ * validates its inputs — Server Actions are reachable by direct POST, not only
+ * through the UI.
+ */
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import {
+  createPrompt,
+  forkPrompt,
+  restoreVersion,
+  saveVersion,
+  updatePromptMeta,
+  deletePrompt,
+  type VersionContent,
+} from '@/lib/repo';
+import { emptySections } from '@/lib/sections';
+
+function requireId(value: unknown, label: string): string {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`${label} is required`);
+  }
+  return value;
+}
+
+export async function createPromptAction(formData: FormData) {
+  const name = String(formData.get('name') ?? '').trim();
+  if (name === '') throw new Error('Name is required');
+
+  const archetype = String(formData.get('archetype') ?? 'custom');
+  const { promptId } = createPrompt({
+    name,
+    archetype,
+    content: { sections: emptySections() },
+  });
+
+  revalidatePath('/');
+  redirect(`/prompts/${promptId}`);
+}
+
+export async function saveVersionAction(
+  promptId: string,
+  content: VersionContent,
+  message?: string,
+) {
+  requireId(promptId, 'promptId');
+  if (!content?.sections) throw new Error('Sections are required');
+
+  const version = saveVersion(promptId, content, message);
+
+  revalidatePath('/');
+  revalidatePath(`/prompts/${promptId}`);
+  return { id: version.id, number: version.number, createdAt: version.createdAt };
+}
+
+export async function updateMetaAction(
+  promptId: string,
+  meta: { name?: string; archetype?: string; tags?: string[] },
+) {
+  requireId(promptId, 'promptId');
+  updatePromptMeta(promptId, meta);
+
+  revalidatePath('/');
+  revalidatePath(`/prompts/${promptId}`);
+}
+
+export async function restoreVersionAction(promptId: string, versionId: string) {
+  requireId(promptId, 'promptId');
+  requireId(versionId, 'versionId');
+
+  const version = restoreVersion(versionId);
+
+  revalidatePath('/');
+  revalidatePath(`/prompts/${promptId}`);
+  return { id: version.id, number: version.number };
+}
+
+export async function forkPromptAction(versionId: string, name?: string) {
+  requireId(versionId, 'versionId');
+
+  const { promptId } = forkPrompt(versionId, name);
+
+  revalidatePath('/');
+  redirect(`/prompts/${promptId}`);
+}
+
+export async function deletePromptAction(formData: FormData) {
+  const promptId = requireId(formData.get('promptId'), 'promptId');
+  deletePrompt(promptId);
+
+  revalidatePath('/');
+  redirect('/');
+}

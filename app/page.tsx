@@ -17,6 +17,12 @@ export default function LibraryPage() {
           <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-faint)]">
             all prompts
           </span>
+          <Link
+            href="/compare"
+            className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-faint)] hover:text-[var(--color-accent)]"
+          >
+            a/b compare →
+          </Link>
         </header>
 
         {prompts.length === 0 ? (

@@ -16,6 +16,7 @@ import {
   deleteStackPreset,
   deleteTestCase,
   saveStackPreset,
+  setComparisonWinner,
   updateTestCase,
   forkPrompt,
   restoreVersion,
@@ -142,4 +143,13 @@ export async function deleteTestCaseAction(promptId: string, id: string) {
   requireId(id, 'testCaseId');
   deleteTestCase(id);
   revalidatePath(`/prompts/${promptId}`);
+}
+
+export async function setComparisonWinnerAction(
+  id: string,
+  winner: 'left' | 'right' | null,
+) {
+  requireId(id, 'comparisonId');
+  setComparisonWinner(id, winner);
+  revalidatePath('/compare');
 }

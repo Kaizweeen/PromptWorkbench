@@ -18,15 +18,17 @@ import { saveVersionAction, updateMetaAction } from '@/app/actions';
 import { GeneratePanel } from './generate-panel';
 import type { PresetSummary } from './stack-picker';
 import { PreviewPane } from './preview-pane';
+import { RunPanel } from './run-panel';
 import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
 
-type RightTab = 'preview' | 'generate' | 'history';
+type RightTab = 'preview' | 'run' | 'generate' | 'history';
 
 export function Workbench({
   promptId,
+  latestVersionId,
   archetype,
   initialSections,
   initialStack,
@@ -35,6 +37,7 @@ export function Workbench({
   presets,
 }: {
   promptId: string;
+  latestVersionId: string;
   archetype: ArchetypeId;
   initialSections: PromptSections;
   initialStack: TechStack | null;
@@ -175,6 +178,9 @@ export function Workbench({
           <TabButton active={tab === 'preview'} onClick={() => setTab('preview')}>
             preview
           </TabButton>
+          <TabButton active={tab === 'run'} onClick={() => setTab('run')}>
+            run
+          </TabButton>
           <TabButton active={tab === 'generate'} onClick={() => setTab('generate')}>
             generate
           </TabButton>
@@ -184,6 +190,16 @@ export function Workbench({
         </div>
 
         {tab === 'preview' && <PreviewPane rendered={rendered} />}
+        {tab === 'run' && (
+          <RunPanel
+            versionId={latestVersionId}
+            sections={sections}
+            stack={stack}
+            channelOverrides={channelOverrides}
+            variables={variables}
+            dirty={dirty}
+          />
+        )}
         {tab === 'generate' && (
           <GeneratePanel
             archetype={currentArchetype}

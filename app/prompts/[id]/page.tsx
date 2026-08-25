@@ -55,6 +55,7 @@ export default async function PromptPage(props: { params: Promise<{ id: string }
         <LibraryPane prompts={listPrompts()} activeId={id} />
         <Workbench
           promptId={id}
+          latestVersionId={latest.id}
           archetype={
             isArchetypeId(prompt.archetype)
               ? (prompt.archetype as ArchetypeId)

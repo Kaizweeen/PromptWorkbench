@@ -11,14 +11,17 @@ import { and, count, desc, eq, max } from 'drizzle-orm';
 import { db } from './db';
 import {
   prompts,
+  runs,
   stackPresets,
   versions,
   type Prompt,
+  type Run,
   type StackPreset,
   type Version,
 } from './db/schema';
 import { emptySections, type Channel, type PromptSections, type SectionKey } from './sections';
-import type { TechStack } from './render';
+import type { TechStack, RenderedPrompt } from './render';
+import type { ModelId, Effort, TokenUsage } from './config';
 
 export interface VersionContent {
   sections: PromptSections;
@@ -291,4 +294,54 @@ export function saveStackPreset(name: string, stack: TechStack): StackPreset {
 
 export function deleteStackPreset(id: string): void {
   db.delete(stackPresets).where(eq(stackPresets.id, id)).run();
+}
+
+/* ------------------------------------------------------------------- runs */
+
+export interface RunRecord {
+  versionId: string;
+  testCaseId?: string | null;
+  model: ModelId;
+  effort?: Effort | null;
+  /** The exact prompt that was sent, not the one currently on screen. */
+  rendered: RenderedPrompt;
+  response?: string | null;
+  usage?: TokenUsage | null;
+  durationMs?: number | null;
+  costUsd?: number | null;
+  error?: string | null;
+}
+
+/** Persist a run. Returns the new run id. */
+export function recordRun(run: RunRecord): string {
+  const id = newId();
+
+  db.insert(runs)
+    .values({
+      id,
+      versionId: run.versionId,
+      testCaseId: run.testCaseId ?? null,
+      model: run.model,
+      effort: run.effort ?? null,
+      rendered: run.rendered,
+      response: run.response ?? null,
+      usage: run.usage ?? null,
+      durationMs: run.durationMs ?? null,
+      costUsd: run.costUsd ?? null,
+      error: run.error ?? null,
+    })
+    .run();
+
+  return id;
+}
+
+/** Runs for a prompt, newest first. */
+export function listRunsForVersion(versionId: string, limit = 50): Run[] {
+  return db
+    .select()
+    .from(runs)
+    .where(eq(runs.versionId, versionId))
+    .orderBy(desc(runs.createdAt))
+    .limit(limit)
+    .all();
 }

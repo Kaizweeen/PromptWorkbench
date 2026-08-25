@@ -30,6 +30,7 @@ import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
+import { TabButton } from './tab-button';
 
 type RightTab =
   | 'preview'
@@ -286,29 +287,5 @@ export function Workbench({
         )}
       </Pane>
     </>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="border-b-2 px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors"
-      style={{
-        color: active ? 'var(--color-text)' : 'var(--color-faint)',
-        borderColor: active ? 'var(--color-accent)' : 'transparent',
-      }}
-    >
-      {children}
-    </button>
   );
 }

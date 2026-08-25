@@ -95,16 +95,18 @@ task-context region — it's context about the *target* project, not about this 
 
 Each phase ends with: app runs, tests pass, I summarize, **I stop and wait for you.**
 
-| # | Phase | Delivers | Tests |
+All eight phases are complete. 208 unit tests pass; the build is clean.
+
+| # | Phase | Delivers | Status |
 |---|---|---|---|
-| 1 | Foundation | Scaffold, Drizzle schema + migrations, section model, `renderPrompt()` | ✅ render unit tests |
-| 2 | Editor + library | Section editor w/ hints, variable detection, live preview, save, versioning, version diff | ✅ variable detection, diff |
-| 3 | Templates + stack | 6 archetypes as data in `lib/templates/`, stack checkbox grid, presets, Stage A deterministic fill | ✅ template fill |
-| 4 | API layer | Server routes, streaming, model picker, token/cost accounting, retry + backoff | ✅ cost calc, retry |
-| 5 | Brainstorm | Chat, one-question-at-a-time interview, requirement chips, generate-from-conversation | — |
-| 6 | AI refine | Meta-prompt, section-level diff, per-change accept/reject | ✅ diff apply |
-| 7 | Test runner | Cases, 6 assertion types, concurrent runs w/ cap, pass/fail matrix across versions | ✅ assertion eval |
-| 8 | A/B compare | Side-by-side diff, dual run, winner toggle | — |
+| 1 | Foundation | Scaffold, Drizzle schema + migrations, section model, `renderPrompt()` | ✅ done |
+| 2 | Editor + library | Section editor w/ hints, variable detection, live preview, save, versioning, version diff | ✅ done |
+| 3 | Templates + stack | 6 archetypes as data in `lib/templates/`, stack checkbox grid, presets, Stage A deterministic fill | ✅ done |
+| 4 | API layer | Server routes, streaming, model picker, token/cost accounting, retry + backoff | ✅ done |
+| 5 | Brainstorm | Chat, one-question-at-a-time interview, requirement chips, generate-from-conversation | ✅ done |
+| 6 | AI refine | Meta-prompt, section-level diff, per-change accept/reject | ✅ done |
+| 7 | Test runner | Cases, 6 assertion types, concurrent runs w/ cap, pass/fail matrix across versions | ✅ done |
+| 8 | A/B compare | Side-by-side diff, dual run, winner toggle | ✅ done |
 
 Files stay under ~300 lines. The API key never reaches the browser — every
 Anthropic call goes through a route handler reading `ANTHROPIC_API_KEY` from

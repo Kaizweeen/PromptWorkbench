@@ -19,12 +19,14 @@ import { GeneratePanel } from './generate-panel';
 import type { PresetSummary } from './stack-picker';
 import { PreviewPane } from './preview-pane';
 import { RunPanel } from './run-panel';
+import { BrainstormPanel } from './brainstorm-panel';
+import { RequirementChips } from './requirement-chips';
 import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
 
-type RightTab = 'preview' | 'run' | 'generate' | 'history';
+type RightTab = 'preview' | 'run' | 'brainstorm' | 'generate' | 'history';
 
 export function Workbench({
   promptId,
@@ -181,6 +183,9 @@ export function Workbench({
           <TabButton active={tab === 'run'} onClick={() => setTab('run')}>
             run
           </TabButton>
+          <TabButton active={tab === 'brainstorm'} onClick={() => setTab('brainstorm')}>
+            brainstorm
+          </TabButton>
           <TabButton active={tab === 'generate'} onClick={() => setTab('generate')}>
             generate
           </TabButton>
@@ -199,6 +204,23 @@ export function Workbench({
             variables={variables}
             dirty={dirty}
           />
+        )}
+        {tab === 'brainstorm' && (
+          <>
+            <RequirementChips
+              requirements={requirements}
+              onChange={setRequirements}
+            />
+            <BrainstormPanel
+              requirements={requirements}
+              onRequirements={setRequirements}
+              onGenerate={(nextGoal, nextRequirements) => {
+                if (nextGoal !== '') setGoal(nextGoal);
+                setRequirements(nextRequirements);
+                setTab('generate');
+              }}
+            />
+          </>
         )}
         {tab === 'generate' && (
           <GeneratePanel

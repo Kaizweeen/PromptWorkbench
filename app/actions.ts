@@ -12,8 +12,11 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   createPrompt,
+  createTestCase,
   deleteStackPreset,
+  deleteTestCase,
   saveStackPreset,
+  updateTestCase,
   forkPrompt,
   restoreVersion,
   saveVersion,
@@ -23,6 +26,7 @@ import {
 } from '@/lib/repo';
 import { emptySections } from '@/lib/sections';
 import type { TechStack } from '@/lib/render';
+import type { AssertionSpec } from '@/lib/db/schema';
 
 function requireId(value: unknown, label: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
@@ -110,4 +114,32 @@ export async function deleteStackPresetAction(id: string) {
   requireId(id, 'presetId');
   deleteStackPreset(id);
   revalidatePath('/');
+}
+
+export async function createTestCaseAction(
+  promptId: string,
+  input: { name: string; inputs?: Record<string, string>; expected?: string | null; assertion?: AssertionSpec | null },
+) {
+  requireId(promptId, 'promptId');
+  if (!input.name?.trim()) throw new Error('Test case name is required');
+
+  const id = createTestCase({ promptId, ...input, name: input.name.trim() });
+  revalidatePath(`/prompts/${promptId}`);
+  return { id };
+}
+
+export async function updateTestCaseAction(
+  promptId: string,
+  id: string,
+  patch: { name?: string; inputs?: Record<string, string>; expected?: string | null; assertion?: AssertionSpec | null },
+) {
+  requireId(id, 'testCaseId');
+  updateTestCase(id, patch);
+  revalidatePath(`/prompts/${promptId}`);
+}
+
+export async function deleteTestCaseAction(promptId: string, id: string) {
+  requireId(id, 'testCaseId');
+  deleteTestCase(id);
+  revalidatePath(`/prompts/${promptId}`);
 }

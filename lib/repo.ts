@@ -11,11 +11,16 @@ import { and, count, desc, eq, max } from 'drizzle-orm';
 import { db } from './db';
 import {
   prompts,
+  results,
   runs,
+  testCases,
   stackPresets,
   versions,
+  type AssertionSpec,
   type Prompt,
+  type Result,
   type Run,
+  type TestCase,
   type StackPreset,
   type Version,
 } from './db/schema';
@@ -344,4 +349,113 @@ export function listRunsForVersion(versionId: string, limit = 50): Run[] {
     .orderBy(desc(runs.createdAt))
     .limit(limit)
     .all();
+}
+
+/* ------------------------------------------------------------- test cases */
+
+export function listTestCases(promptId: string): TestCase[] {
+  return db
+    .select()
+    .from(testCases)
+    .where(eq(testCases.promptId, promptId))
+    .orderBy(testCases.createdAt)
+    .all();
+}
+
+export function createTestCase(input: {
+  promptId: string;
+  name: string;
+  inputs?: Record<string, string>;
+  expected?: string | null;
+  assertion?: AssertionSpec | null;
+}): string {
+  const id = newId();
+  db.insert(testCases)
+    .values({
+      id,
+      promptId: input.promptId,
+      name: input.name,
+      inputs: input.inputs ?? {},
+      expected: input.expected ?? null,
+      assertion: input.assertion ?? null,
+    })
+    .run();
+  return id;
+}
+
+export function updateTestCase(
+  id: string,
+  patch: {
+    name?: string;
+    inputs?: Record<string, string>;
+    expected?: string | null;
+    assertion?: AssertionSpec | null;
+  },
+): void {
+  db.update(testCases).set(patch).where(eq(testCases.id, id)).run();
+}
+
+export function deleteTestCase(id: string): void {
+  db.delete(testCases).where(eq(testCases.id, id)).run();
+}
+
+/* ---------------------------------------------------------------- results */
+
+export function recordResult(input: {
+  runId: string;
+  testCaseId: string;
+  versionId: string;
+  passed: boolean;
+  detail?: string | null;
+}): string {
+  const id = newId();
+  db.insert(results)
+    .values({
+      id,
+      runId: input.runId,
+      testCaseId: input.testCaseId,
+      versionId: input.versionId,
+      passed: input.passed,
+      detail: input.detail ?? null,
+    })
+    .run();
+  return id;
+}
+
+export interface MatrixCell {
+  testCaseId: string;
+  versionId: string;
+  passed: boolean;
+  detail: string | null;
+  createdAt: number;
+}
+
+/**
+ * The pass/fail matrix: rows are test cases, columns are versions.
+ *
+ * Only the latest result per (case, version) is returned — re-running a case
+ * against a version should replace what you see, not stack up behind it.
+ */
+export function resultMatrix(promptId: string): MatrixCell[] {
+  const rows = db
+    .select({
+      testCaseId: results.testCaseId,
+      versionId: results.versionId,
+      passed: results.passed,
+      detail: results.detail,
+      createdAt: results.createdAt,
+    })
+    .from(results)
+    .innerJoin(versions, eq(versions.id, results.versionId))
+    .where(eq(versions.promptId, promptId))
+    .orderBy(desc(results.createdAt))
+    .all();
+
+  const latest = new Map<string, MatrixCell>();
+  for (const row of rows) {
+    const key = `${row.testCaseId}::${row.versionId}`;
+    if (!latest.has(key)) latest.set(key, row);
+  }
+
+  return [...latest.values()];
 }

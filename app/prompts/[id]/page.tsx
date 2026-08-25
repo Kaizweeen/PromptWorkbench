@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPrompt, listPrompts, listStackPresets, listVersions } from '@/lib/repo';
+import {
+  getPrompt,
+  listPrompts,
+  listStackPresets,
+  listTestCases,
+  listVersions,
+  resultMatrix,
+} from '@/lib/repo';
 import { LibraryPane } from '@/components/library-pane';
 import { Workbench } from '@/components/workbench';
 import type { VersionSummary } from '@/components/version-history';
@@ -70,6 +77,13 @@ export default async function PromptPage(props: { params: Promise<{ id: string }
             name: p.name,
             stack: p.stack,
           }))}
+          testCases={listTestCases(id).map((c) => ({
+            id: c.id,
+            name: c.name,
+            inputs: c.inputs,
+            assertion: c.assertion,
+          }))}
+          matrixCells={resultMatrix(id)}
         />
       </div>
     </div>

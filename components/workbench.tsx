@@ -22,12 +22,23 @@ import { RunPanel } from './run-panel';
 import { BrainstormPanel } from './brainstorm-panel';
 import { RequirementChips } from './requirement-chips';
 import { RefinePanel } from './refine-panel';
+import { TestPanel } from './test-panel';
+import type { TestCaseDraft } from './test-case-editor';
+import type { MatrixVersion } from './result-matrix';
+import type { MatrixCell } from '@/lib/repo';
 import { SectionEditor } from './section-editor';
 import { VariableBar } from './variable-bar';
 import { VersionHistory, type VersionSummary } from './version-history';
 import { Button, Kbd, Pane, PaneTitle } from './ui';
 
-type RightTab = 'preview' | 'run' | 'brainstorm' | 'generate' | 'refine' | 'history';
+type RightTab =
+  | 'preview'
+  | 'run'
+  | 'tests'
+  | 'brainstorm'
+  | 'generate'
+  | 'refine'
+  | 'history';
 
 export function Workbench({
   promptId,
@@ -38,6 +49,8 @@ export function Workbench({
   channelOverrides,
   versions,
   presets,
+  testCases,
+  matrixCells,
 }: {
   promptId: string;
   latestVersionId: string;
@@ -47,6 +60,8 @@ export function Workbench({
   channelOverrides: Partial<Record<SectionKey, Channel>> | null;
   versions: VersionSummary[];
   presets: PresetSummary[];
+  testCases: TestCaseDraft[];
+  matrixCells: MatrixCell[];
 }) {
   const router = useRouter();
   const [sections, setSections] = useState(initialSections);
@@ -184,6 +199,9 @@ export function Workbench({
           <TabButton active={tab === 'run'} onClick={() => setTab('run')}>
             run
           </TabButton>
+          <TabButton active={tab === 'tests'} onClick={() => setTab('tests')}>
+            tests
+          </TabButton>
           <TabButton active={tab === 'brainstorm'} onClick={() => setTab('brainstorm')}>
             brainstorm
           </TabButton>
@@ -205,6 +223,17 @@ export function Workbench({
             sections={sections}
             stack={stack}
             channelOverrides={channelOverrides}
+            variables={variables}
+            dirty={dirty}
+          />
+        )}
+        {tab === 'tests' && (
+          <TestPanel
+            promptId={promptId}
+            versionId={latestVersionId}
+            cases={testCases}
+            versions={versions.map((v): MatrixVersion => ({ id: v.id, number: v.number }))}
+            cells={matrixCells}
             variables={variables}
             dirty={dirty}
           />
